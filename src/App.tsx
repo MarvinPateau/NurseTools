@@ -243,7 +243,7 @@ function Field({ label, suffix, value, onChange, type = "number", min, max, step
 }
 
 // Champ spécifique string (pour autoriser la saisie vide sans forcer 0)
-function FieldStr({ label, suffix, value, onChange, step, placeholder }: { label: string; suffix?: string; value: string; onChange: (v: string) => void; step?: string | number; placeholder?: string }) {
+function FieldStr({ label, suffix, value, onChange, placeholder }: { label: string; suffix?: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   const id = useId();
   return (
     <label className="block mb-3" htmlFor={id}>
@@ -556,8 +556,7 @@ function ABGTool() {
   const agCorr = useMemo(() => (Number.isFinite(albumin) ? correctedAnionGap(ag, albumin) : ag), [ag, albumin]);
   const disorder = useMemo(() => (Number.isFinite(pH) && Number.isFinite(PaCO2) && Number.isFinite(HCO3) ? primaryDisorder(pH, PaCO2, HCO3) : "—"), [pH, PaCO2, HCO3]);
 
-  const pfTag = pf >= 300 ? "Normal/OK" : pf >= 200 ? "SDRA léger (200–300)" : pf >= 100 ? "SDRA modéré (100–200)" : "SDRA sévère (<100)";
-  const pfTone: "ok" | "warn" | "danger" | "info" = pf >= 300 ? "ok" : pf >= 200 ? "info" : pf >= 100 ? "warn" : "danger";
+    const pfTone: "ok" | "warn" | "danger" | "info" = pf >= 300 ? "ok" : pf >= 200 ? "info" : pf >= 100 ? "warn" : "danger";
   const lactTone: "ok" | "warn" | "danger" = Number.isFinite(lactate) && lactate <= 2 ? "ok" : Number.isFinite(lactate) && lactate <= 4 ? "warn" : "danger";
 
   const onCopy = async () => {
@@ -892,9 +891,6 @@ function aAGradientCustom(PaO2: number, PaCO2: number, FiO2: number, Patm = 760,
   return Math.max(0, PAO2 - PaO2);
 }
 
-function aAGradient(PaO2: number, PaCO2: number, FiO2: number) {
-  return aAGradientCustom(PaO2, PaCO2, FiO2);
-}
 
 function anionGap(Na: number, Cl: number, HCO3: number) {
   return Number(Na) - Number(Cl) - Number(HCO3);
@@ -921,25 +917,4 @@ function primaryDisorder(pH: number, PaCO2: number, HCO3: number) {
     return "Alcalose mixte/indéterminée";
   }
   return "—";
-}
-
-function wintersExpectedPaCO2(HCO3: number) {
-  return 1.5 * HCO3 + 8; // ±2 tolérance
-}
-
-function metaAlkExpectedPaCO2(HCO3: number) {
-  return 0.7 * HCO3 + 20; // ±5 tolérance
-}
-
-function respCompHint(kind: "acidosis" | "alkalosis", acute: boolean, deltaCO2: number) {
-  // HCO3 change per 10 mmHg PaCO2 change
-  if (kind === "acidosis") return acute ? 1 * (deltaCO2 / 10) : 3.5 * (deltaCO2 / 10);
-  return acute ? -2 * (deltaCO2 / 10) : -4 * (deltaCO2 / 10);
-}
-
-function lactoneHint(l: number) {
-  if (!Number.isFinite(l)) return "";
-  if (l <= 2) return "(normal)";
-  if (l <= 4) return "(élevé)";
-  return "(très élevé)";
 }
