@@ -1,54 +1,180 @@
 import React, { useMemo, useState } from "react";
 
 export default function NurseToolkitApp() {
+  const [tab, setTab] = useState<TabKey>("calculs");
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900">
-      <Header />
-      <main className="mx-auto max-w-6xl px-4 pb-24">
-        <Hero />
-        <ToolGrid />
-        <Tests />
+      <Header onChangeTab={setTab} active={tab} />
+
+      <main className="mx-auto w-full max-w-3xl px-4 pb-28 sm:pb-24">
+        <Greeting />
+        <Tabs active={tab} onChange={setTab} />
+        <TabContent active={tab} />
       </main>
+
+      <BottomNav active={tab} onChange={setTab} />
       <Footer />
     </div>
   );
 }
 
-function Header() {
+type TabKey = "calculs" | "scores" | "patient" | "notes" | "apropos";
+
+function Header({ onChangeTab, active }: { onChangeTab: (t: TabKey) => void; active: TabKey }) {
   return (
-    <header className="sticky top-0 z-40 backdrop-blur bg-white/70 border-b border-slate-200/60">
-      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+    <header className="sticky top-0 z-40 backdrop-blur bg-white/80 border-b border-slate-200/60">
+      <div className="mx-auto w-full max-w-3xl px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
           <span className="inline-flex items-center gap-2">
             <span className="inline-block h-6 w-6 rounded-xl bg-slate-900" />
-            <span>Boîte à outils infirmière</span>
+            <span>Outils de Chloé</span>
           </span>
         </h1>
-        <div className="text-[11px] sm:text-xs text-slate-600">
-          Outil d'aide — toujours vérifier selon votre protocole local
-        </div>
+        <nav className="hidden sm:flex gap-2 text-sm">
+          <TopLink id="calculs" label="Calculs" active={active} onClick={onChangeTab} />
+          <TopLink id="scores" label="Scores" active={active} onClick={onChangeTab} />
+          <TopLink id="patient" label="Patient" active={active} onClick={onChangeTab} />
+          <TopLink id="notes" label="Notes" active={active} onClick={onChangeTab} />
+          <TopLink id="apropos" label="À propos" active={active} onClick={onChangeTab} />
+        </nav>
       </div>
     </header>
   );
 }
 
-function Hero() {
+function TopLink({ id, label, active, onClick }: { id: TabKey; label: string; active: TabKey; onClick: (t: TabKey) => void }) {
+  const is = active === id;
   return (
-    <section className="mt-8 mb-8">
-      <div className="grid md:grid-cols-2 gap-6 items-center">
-        <div className="order-2 md:order-1">
-          <p className="text-sm uppercase tracking-wider text-slate-500">Pour le quotidien</p>
-          <h2 className="text-3xl sm:text-4xl font-bold leading-tight mt-2">Calculs rapides, scores cliniques & repères utiles</h2>
-          <p className="text-slate-600 mt-3">Tout en français, pensé pour gagner de précieuses minutes : doses, débits, gouttes/min, GCS, NEWS2, clairance de la créatinine, IMC… et plus.</p>
-          <div className="mt-4 text-xs text-slate-500">⚠️ Aide au calcul uniquement. Double contrôle recommandé.</div>
-        </div>
-        <div className="order-1 md:order-2">
-          <div className="rounded-3xl border bg-white/70 backdrop-blur p-5 shadow-xl">
-            <QuickPanel />
-          </div>
-        </div>
+    <button
+      onClick={() => onClick(id)}
+      className={`px-3 py-1.5 rounded-full border transition ${is ? "bg-slate-900 text-white border-slate-900" : "bg-white hover:bg-slate-50"}`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function Greeting() {
+  const hours = new Date().getHours();
+  const tone = hours < 12 ? "Bonjour" : hours < 18 ? "Bon après-midi" : "Bonsoir";
+  return (
+    <section className="mt-6 sm:mt-8 mb-2">
+      <p className="text-sm uppercase tracking-wider text-slate-500">{tone}</p>
+      <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight mt-1">Chloé, tout ce qu’il te faut, dans ta poche.</h2>
+      <p className="text-slate-600 mt-2">Calculs rapides, scores cliniques et repères utiles. Optimisé pour mobile, hors stress.</p>
+    </section>
+  );
+}
+
+function Tabs({ active, onChange }: { active: TabKey; onChange: (t: TabKey) => void }) {
+  const items: { id: TabKey; label: string }[] = [
+    { id: "calculs", label: "💊 Calculs" },
+    { id: "scores", label: "📈 Scores" },
+    { id: "patient", label: "🧪 Patient" },
+    { id: "notes", label: "🗒️ Notes" },
+    { id: "apropos", label: "ℹ️ À propos" },
+  ];
+  return (
+    <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
+      {items.map((t) => (
+        <button
+          key={t.id}
+          onClick={() => onChange(t.id)}
+          className={`px-3 py-2 rounded-2xl border text-sm transition shadow-sm ${active === t.id ? "bg-slate-900 text-white border-slate-900" : "bg-white hover:bg-slate-50"}`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TabContent({ active }: { active: TabKey }) {
+  if (active === "calculs") return <CalculsTab />;
+  if (active === "scores") return <ScoresTab />;
+  if (active === "patient") return <PatientTab />;
+  if (active === "notes") return <NotesTab />;
+  return <AProposTab />;
+}
+
+function CalculsTab() {
+  return (
+    <section className="mt-6 space-y-6">
+      <QuickPanel />
+      <DoseCalculator />
+      <div className="grid sm:grid-cols-2 gap-6">
+        <InfusionRate />
+        <DripRate />
       </div>
     </section>
+  );
+}
+
+function ScoresTab() {
+  return (
+    <section className="mt-6 space-y-6">
+      <GCS />
+      <NEWS2 />
+    </section>
+  );
+}
+
+function PatientTab() {
+  return (
+    <section className="mt-6 space-y-6">
+      <CrCl />
+      <BMI />
+    </section>
+  );
+}
+
+function NotesTab() {
+  return (
+    <section className="mt-6 space-y-6">
+      <NoteBlock />
+    </section>
+  );
+}
+
+function AProposTab() {
+  return (
+    <section className="mt-6 space-y-6">
+      <Card title="À propos" subtitle="Conçu pour Chloé — usage d’aide uniquement">
+        <p className="text-sm text-slate-700">Toujours vérifier selon le protocole local et réaliser un double contrôle pour les calculs. Créé avec ❤️ pour Chloé.</p>
+      </Card>
+      <Tests />
+    </section>
+  );
+}
+
+function BottomNav({ active, onChange }: { active: TabKey; onChange: (t: TabKey) => void }) {
+  const items: { id: TabKey; icon: string; label: string }[] = [
+    { id: "calculs", icon: "💊", label: "Calculs" },
+    { id: "scores", icon: "📈", label: "Scores" },
+    { id: "patient", icon: "🧪", label: "Patient" },
+    { id: "notes", icon: "🗒️", label: "Notes" },
+    { id: "apropos", icon: "ℹ️", label: "Infos" },
+  ];
+  return (
+    <nav className="fixed bottom-0 inset-x-0 z-40 sm:hidden">
+      <div className="mx-auto max-w-3xl bg-white/90 backdrop-blur border-t border-slate-200">
+        <div className="grid grid-cols-5">
+          {items.map((t) => {
+            const is = active === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => onChange(t.id)}
+                className={`flex flex-col items-center justify-center py-2 text-xs ${is ? "text-slate-900" : "text-slate-500"}`}
+              >
+                <span className="text-base leading-none">{t.icon}</span>
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </nav>
   );
 }
 
@@ -60,21 +186,6 @@ function Card({ title, subtitle, children }: { title: string; subtitle?: string;
         {subtitle && <p className="text-sm text-slate-600 mt-1">{subtitle}</p>}
       </div>
       {children}
-    </div>
-  );
-}
-
-function ToolGrid() {
-  return (
-    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-      <DoseCalculator />
-      <InfusionRate />
-      <DripRate />
-      <GCS />
-      <NEWS2 />
-      <CrCl />
-      <BMI />
-      <NoteBlock />
     </div>
   );
 }
@@ -151,7 +262,7 @@ function DoseCalculator() {
 
   return (
     <Card title="Calcul de dose" subtitle="Règle de trois, mg/kg, dilution">
-      <div className="flex gap-2 mb-2">
+      <div className="flex gap-2 mb-2 overflow-x-auto no-scrollbar">
         {[
           { id: "mgkg", label: "mg/kg" },
           { id: "regle3", label: "Règle de trois" },
@@ -160,7 +271,7 @@ function DoseCalculator() {
           <button
             key={m.id}
             onClick={() => setMode(m.id as any)}
-            className={`px-3 py-1.5 rounded-full text-sm border ${mode === m.id ? "bg-slate-900 text-white border-slate-900" : "bg-white hover:bg-slate-50"}`}
+            className={`px-3 py-1.5 rounded-full text-sm border whitespace-nowrap ${mode === m.id ? "bg-slate-900 text-white border-slate-900" : "bg-white hover:bg-slate-50"}`}
           >
             {m.label}
           </button>
@@ -193,7 +304,7 @@ function DoseCalculator() {
         </div>
       )}
 
-      <div className="text-xs text-slate-500 mt-3">Toujours réaliser un double contrôle selon les procédures locales.</div>
+      <div className="text-xs text-slate-500 mt-3">Double contrôle recommandé.</div>
     </Card>
   );
 }
@@ -231,7 +342,7 @@ function DripRate() {
   }, [volume, df, minutes]);
 
   return (
-    <Card title="Gouttes par minute" subtitle="Formule: (Volume × facteur de chute) ÷ temps">
+    <Card title="Gouttes par minute" subtitle="(Volume × facteur de chute) ÷ temps">
       <Field label="Volume" value={volume} onChange={setVolume} suffix="mL" />
       <Field label="Temps" value={minutes} onChange={setMinutes} suffix="min" />
       <Field label="Facteur de chute" value={df} onChange={setDf} suffix="gtt/mL" />
@@ -249,7 +360,7 @@ function GCS() {
   const interp = total >= 13 ? "Traumatisme léger (13–15)" : total >= 9 ? "Modéré (9–12)" : "Sévère (≤8)";
 
   return (
-    <Card title="Glasgow Coma Scale (GCS)" subtitle="Additionner Œil (4) + Verbal (5) + Moteur (6)">
+    <Card title="Glasgow Coma Scale (GCS)" subtitle="E4 + V5 + M6">
       <Select label="Ouverture des yeux" value={eye} onChange={setEye} options={[
         { v: 4, l: "Spontanée (4)" },
         { v: 3, l: "À la voix (3)" },
@@ -274,7 +385,7 @@ function GCS() {
       <Result tone={total <= 8 ? "danger" : total < 13 ? "warn" : "ok"}>
         Score total: <b>{total}</b> — {interp}
       </Result>
-      <div className="text-[11px] text-slate-500 mt-2">Référence: E4 V5 M6, échelle de Glasgow.</div>
+      <div className="text-[11px] text-slate-500 mt-2">Référence: échelle de Glasgow (E4 V5 M6).</div>
     </Card>
   );
 }
@@ -418,7 +529,7 @@ function NoteBlock() {
   return (
     <Card title="Bloc-notes rapide" subtitle="Sauvegardez localement vos repères (reste dans ce navigateur)">
       <textarea
-        className="w-full min-h-[120px] rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+        className="w-full min-h-[140px] rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
         placeholder="Ex: dilution habituelle, repères de service, check-lists..."
         value={txt}
         onChange={(e) => setTxt(e.target.value)}
@@ -434,7 +545,7 @@ function QuickPanel() {
   const [c, setC] = useState<number>(10);
   const ml = safeDiv(Number(w) * Number(d), Number(c));
   return (
-    <div>
+    <div className="rounded-3xl border bg-white p-4">
       <div className="text-sm font-medium mb-2">Raccourci: dose mg/kg → mL</div>
       <div className="grid grid-cols-3 gap-2 mb-3">
         <MiniField label="Poids" value={w} suffix="kg" onChange={setW} />
@@ -473,14 +584,14 @@ function Badge({ label }: BadgeProps) {
 
 function Footer() {
   return (
-    <footer className="mt-10 border-t bg-white/70 backdrop-blur">
-      <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-500">
+    <footer className="mt-10 border-t bg-white/80 backdrop-blur">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 text-sm text-slate-500">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div>
             Conçu pour faciliter le quotidien infirmier. ⚠️ Aide au calcul uniquement.
           </div>
           <div>
-            © {new Date().getFullYear()} — Fait avec ❤️
+            © {new Date().getFullYear()} — Fait avec ❤️ pour Chloé
           </div>
         </div>
       </div>
@@ -550,7 +661,7 @@ function Tests() {
   const allPass = cases.every((c) => c.pass);
 
   return (
-    <section className="mt-10">
+    <section className="mt-6">
       <details className="rounded-2xl border bg-white p-4">
         <summary className={`cursor-pointer select-none text-sm font-medium ${allPass ? "text-emerald-700" : "text-rose-700"}`}>
           Tests intégrés: {allPass ? "OK" : "ÉCHEC"}
