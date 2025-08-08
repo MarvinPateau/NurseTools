@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useId } from "react";
 
 export default function NurseToolkitApp() {
-  const [tab, setTab] = useState<TabKey>("calculs");
+  const [tab, setTab] = useState<TabKey>("gaz");
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900">
       <Header onChangeTab={setTab} active={tab} />
@@ -18,7 +18,7 @@ export default function NurseToolkitApp() {
   );
 }
 
-type TabKey = "calculs" | "scores" | "patient" | "notes" | "apropos";
+type TabKey = "calculs" | "scores" | "gaz" | "patient" | "notes" | "apropos";
 
 function Header({ onChangeTab, active }: { onChangeTab: (t: TabKey) => void; active: TabKey }) {
   return (
@@ -26,13 +26,14 @@ function Header({ onChangeTab, active }: { onChangeTab: (t: TabKey) => void; act
       <div className="mx-auto w-full max-w-3xl px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
           <span className="inline-flex items-center gap-2">
-            <span className="inline-block h-6 w-6 rounded-xl bg-slate-900" />
+            <span className="inline-block h-6 w-6 rounded-xl bg-slate-900" aria-hidden />
             <span>Outils de Chloé</span>
           </span>
         </h1>
-        <nav className="hidden sm:flex gap-2 text-sm">
+        <nav className="hidden sm:flex gap-2 text-sm" aria-label="Navigation principale">
           <TopLink id="calculs" label="Calculs" active={active} onClick={onChangeTab} />
           <TopLink id="scores" label="Scores" active={active} onClick={onChangeTab} />
+          <TopLink id="gaz" label="Gazométrie" active={active} onClick={onChangeTab} />
           <TopLink id="patient" label="Patient" active={active} onClick={onChangeTab} />
           <TopLink id="notes" label="Notes" active={active} onClick={onChangeTab} />
           <TopLink id="apropos" label="À propos" active={active} onClick={onChangeTab} />
@@ -47,7 +48,8 @@ function TopLink({ id, label, active, onClick }: { id: TabKey; label: string; ac
   return (
     <button
       onClick={() => onClick(id)}
-      className={`px-3 py-1.5 rounded-full border transition ${is ? "bg-slate-900 text-white border-slate-900" : "bg-white hover:bg-slate-50"}`}
+      className={`px-3 py-1.5 rounded-full border transition focus:outline-none focus:ring-2 focus:ring-slate-900/20 ${is ? "bg-slate-900 text-white border-slate-900" : "bg-white hover:bg-slate-50"}`}
+      aria-current={is ? "page" : undefined}
     >
       {label}
     </button>
@@ -70,17 +72,20 @@ function Tabs({ active, onChange }: { active: TabKey; onChange: (t: TabKey) => v
   const items: { id: TabKey; label: string }[] = [
     { id: "calculs", label: "💊 Calculs" },
     { id: "scores", label: "📈 Scores" },
+    { id: "gaz", label: "🩸 Gazométrie" },
     { id: "patient", label: "🧪 Patient" },
     { id: "notes", label: "🗒️ Notes" },
     { id: "apropos", label: "ℹ️ À propos" },
   ];
   return (
-    <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
+    <div className="mt-4 grid grid-cols-2 sm:grid-cols-6 gap-2" role="tablist">
       {items.map((t) => (
         <button
           key={t.id}
+          role="tab"
+          aria-selected={active === t.id}
           onClick={() => onChange(t.id)}
-          className={`px-3 py-2 rounded-2xl border text-sm transition shadow-sm ${active === t.id ? "bg-slate-900 text-white border-slate-900" : "bg-white hover:bg-slate-50"}`}
+          className={`px-3 py-2 rounded-2xl border text-sm transition shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20 ${active === t.id ? "bg-slate-900 text-white border-slate-900" : "bg-white hover:bg-slate-50"}`}
         >
           {t.label}
         </button>
@@ -92,6 +97,7 @@ function Tabs({ active, onChange }: { active: TabKey; onChange: (t: TabKey) => v
 function TabContent({ active }: { active: TabKey }) {
   if (active === "calculs") return <CalculsTab />;
   if (active === "scores") return <ScoresTab />;
+  if (active === "gaz") return <GazometrieTab />;
   if (active === "patient") return <PatientTab />;
   if (active === "notes") return <NotesTab />;
   return <AProposTab />;
@@ -115,6 +121,14 @@ function ScoresTab() {
     <section className="mt-6 space-y-6">
       <GCS />
       <NEWS2 />
+    </section>
+  );
+}
+
+function GazometrieTab() {
+  return (
+    <section className="mt-6 space-y-6">
+      <ABGTool />
     </section>
   );
 }
@@ -151,23 +165,25 @@ function BottomNav({ active, onChange }: { active: TabKey; onChange: (t: TabKey)
   const items: { id: TabKey; icon: string; label: string }[] = [
     { id: "calculs", icon: "💊", label: "Calculs" },
     { id: "scores", icon: "📈", label: "Scores" },
+    { id: "gaz", icon: "🩸", label: "Gaz" },
     { id: "patient", icon: "🧪", label: "Patient" },
     { id: "notes", icon: "🗒️", label: "Notes" },
     { id: "apropos", icon: "ℹ️", label: "Infos" },
   ];
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 sm:hidden">
+    <nav className="fixed bottom-0 inset-x-0 z-40 sm:hidden" aria-label="Navigation mobile">
       <div className="mx-auto max-w-3xl bg-white/90 backdrop-blur border-t border-slate-200">
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {items.map((t) => {
             const is = active === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => onChange(t.id)}
-                className={`flex flex-col items-center justify-center py-2 text-xs ${is ? "text-slate-900" : "text-slate-500"}`}
+                className={`flex flex-col items-center justify-center py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-900/20 ${is ? "text-slate-900" : "text-slate-500"}`}
+                aria-current={is ? "page" : undefined}
               >
-                <span className="text-base leading-none">{t.icon}</span>
+                <span className="text-base leading-none" aria-hidden>{t.icon}</span>
                 <span>{t.label}</span>
               </button>
             );
@@ -180,13 +196,13 @@ function BottomNav({ active, onChange }: { active: TabKey; onChange: (t: TabKey)
 
 function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl border bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+    <section className="rounded-3xl border bg-white p-5 shadow-sm hover:shadow-md transition-shadow" aria-label={title}>
       <div className="mb-4">
         <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
         {subtitle && <p className="text-sm text-slate-600 mt-1">{subtitle}</p>}
       </div>
       {children}
-    </div>
+    </section>
   );
 }
 
@@ -199,23 +215,53 @@ type FieldProps = {
   min?: number;
   max?: number;
   step?: number | string;
+  placeholder?: string;
 };
 
-function Field({ label, suffix, value, onChange, type = "number", min, max, step }: FieldProps) {
+function Field({ label, suffix, value, onChange, type = "number", min, max, step, placeholder }: FieldProps) {
+  const id = useId();
   return (
-    <label className="block mb-3">
+    <label className="block mb-3" htmlFor={id}>
       <div className="text-sm text-slate-700 mb-1">{label}</div>
       <div className="flex items-center gap-2">
         <input
+          id={id}
           className="w-full rounded-xl border px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-slate-900/20"
           type={type}
+          inputMode={type === "number" ? "decimal" : undefined}
           value={value}
           min={min}
           max={max}
+          placeholder={placeholder}
           step={step as any}
-          onChange={(e) => onChange(toNum(e.target.value))}
+          onChange={(e) => onChange(toNumAllowEmpty(e.target.value))}
         />
         {suffix && <div className="text-sm text-slate-500">{suffix}</div>}
+      </div>
+    </label>
+  );
+}
+
+// Champ spécifique string (pour autoriser la saisie vide sans forcer 0)
+function FieldStr({ label, suffix, value, onChange, step, placeholder }: { label: string; suffix?: string; value: string; onChange: (v: string) => void; step?: string | number; placeholder?: string }) {
+  const id = useId();
+  return (
+    <label className="block mb-3" htmlFor={id}>
+      <div className="text-sm text-slate-700 mb-1">{label}</div>
+      <div className="flex items-center gap-2">
+        <input
+          id={id}
+          className="w-full rounded-xl border px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+          type="text"
+          inputMode="decimal"
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {suffix && <div className="text-sm text-slate-500">{suffix}</div>}
+        {value !== "" && (
+          <button type="button" aria-label="Effacer" className="text-slate-500 text-sm px-2 py-1 rounded-lg border hover:bg-slate-50" onClick={() => onChange("")}>×</button>
+        )}
       </div>
     </label>
   );
@@ -469,6 +515,121 @@ function NEWS2() {
   );
 }
 
+function ABGTool() {
+  // états string pour autoriser l'effacement sans forcer 0
+  const [pHStr, setPHStr] = useState<string>("7.40");
+  const [PaCO2Str, setPaCO2Str] = useState<string>("40");
+  const [HCO3Str, setHCO3Str] = useState<string>("24");
+  const [PaO2Str, setPaO2Str] = useState<string>("95");
+  const [FiO2pctStr, setFiO2pctStr] = useState<string>("21");
+  const [NaStr, setNaStr] = useState<string>("140");
+  const [ClStr, setClStr] = useState<string>("104");
+  const [albuminStr, setAlbuminStr] = useState<string>("4");
+  const [lactateStr, setLactateStr] = useState<string>("1.0");
+  const [PatmStr, setPatmStr] = useState<string>("760");
+  const [RStr, setRStr] = useState<string>("0.8");
+  const [respChronic, setRespChronic] = useState<boolean>(false);
+
+  // parse helpers
+  const num = (s: string) => {
+    const n = parseFloat(s.replace(",", "."));
+    return Number.isFinite(n) ? n : NaN;
+  };
+
+  const pH = num(pHStr);
+  const PaCO2 = num(PaCO2Str);
+  const HCO3 = num(HCO3Str);
+  const PaO2 = num(PaO2Str);
+  const FiO2pct = num(FiO2pctStr);
+  const Na = num(NaStr);
+  const Cl = num(ClStr);
+  const albumin = num(albuminStr);
+  const lactate = num(lactateStr);
+  const Patm = num(PatmStr);
+  const R = num(RStr);
+
+  const FiO2 = Math.max(0, Math.min(1, (Number.isFinite(FiO2pct) ? FiO2pct : 0) / 100));
+
+  const pf = useMemo(() => (Number.isFinite(PaO2) && FiO2 > 0 ? pfRatio(PaO2, FiO2) : 0), [PaO2, FiO2]);
+  const aagrad = useMemo(() => (Number.isFinite(PaO2) && Number.isFinite(PaCO2) ? aAGradientCustom(PaO2, PaCO2, FiO2, Number.isFinite(Patm) ? Patm : 760, 47, Number.isFinite(R) ? R : 0.8) : 0), [PaO2, PaCO2, FiO2, Patm, R]);
+  const ag = useMemo(() => (Number.isFinite(Na) && Number.isFinite(Cl) && Number.isFinite(HCO3) ? anionGap(Na, Cl, HCO3) : 0), [Na, Cl, HCO3]);
+  const agCorr = useMemo(() => (Number.isFinite(albumin) ? correctedAnionGap(ag, albumin) : ag), [ag, albumin]);
+  const disorder = useMemo(() => (Number.isFinite(pH) && Number.isFinite(PaCO2) && Number.isFinite(HCO3) ? primaryDisorder(pH, PaCO2, HCO3) : "—"), [pH, PaCO2, HCO3]);
+
+  const pfTag = pf >= 300 ? "Normal/OK" : pf >= 200 ? "SDRA léger (200–300)" : pf >= 100 ? "SDRA modéré (100–200)" : "SDRA sévère (<100)";
+  const pfTone: "ok" | "warn" | "danger" | "info" = pf >= 300 ? "ok" : pf >= 200 ? "info" : pf >= 100 ? "warn" : "danger";
+  const lactTone: "ok" | "warn" | "danger" = Number.isFinite(lactate) && lactate <= 2 ? "ok" : Number.isFinite(lactate) && lactate <= 4 ? "warn" : "danger";
+
+  const onCopy = async () => {
+    const lines = [
+      `Trouble: ${disorder}`,
+      `P/F: ${round(pf)}`,
+      `A–a: ${round(aagrad)} mmHg`,
+      `AG: ${round(ag)} | AGcorr: ${round(agCorr)}`,
+      Number.isFinite(lactate) ? `Lactate: ${round(lactate)} mmol/L` : "",
+    ].filter(Boolean);
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+    } catch {}
+  };
+
+  return (
+    <Card title="Gazométrie (ABG)" subtitle="Aide à l'interprétation rapide">
+      {/* Group 1: Gaz du sang */}
+      <fieldset className="rounded-2xl border p-3">
+        <legend className="px-2 text-xs text-slate-600">Gaz du sang</legend>
+        <div className="grid grid-cols-2 gap-3">
+          <FieldStr label="pH" value={pHStr} onChange={setPHStr} placeholder="ex. 7,32" />
+          <FieldStr label="PaCO₂" value={PaCO2Str} onChange={setPaCO2Str} suffix="mmHg" placeholder="ex. 52" />
+          <FieldStr label="HCO₃⁻" value={HCO3Str} onChange={setHCO3Str} suffix="mEq/L" placeholder="ex. 20" />
+          <FieldStr label="PaO₂" value={PaO2Str} onChange={setPaO2Str} suffix="mmHg" placeholder="ex. 75" />
+          <FieldStr label="FiO₂" value={FiO2pctStr} onChange={setFiO2pctStr} suffix="%" placeholder="ex. 40" />
+        </div>
+      </fieldset>
+
+      {/* Group 2: Ions et lactate */}
+      <fieldset className="rounded-2xl border p-3 mt-3">
+        <legend className="px-2 text-xs text-slate-600">Électrolytes</legend>
+        <div className="grid grid-cols-2 gap-3">
+          <FieldStr label="Na⁺" value={NaStr} onChange={setNaStr} suffix="mmol/L" placeholder="ex. 140" />
+          <FieldStr label="Cl⁻" value={ClStr} onChange={setClStr} suffix="mmol/L" placeholder="ex. 104" />
+          <FieldStr label="HCO₃⁻ (chimie)" value={HCO3Str} onChange={setHCO3Str} suffix="mEq/L" />
+          <FieldStr label="Albumine" value={albuminStr} onChange={setAlbuminStr} suffix="g/dL" placeholder="ex. 4" />
+          <FieldStr label="Lactate" value={lactateStr} onChange={setLactateStr} suffix="mmol/L" placeholder="ex. 1.6" />
+        </div>
+      </fieldset>
+
+      {/* Options avancées */}
+      <details className="mt-3">
+        <summary className="text-xs text-slate-600 cursor-pointer">Options avancées (altitude & physiologie)</summary>
+        <div className="grid grid-cols-2 gap-3 mt-2">
+          <FieldStr label="Pression atmosphérique" value={PatmStr} onChange={setPatmStr} suffix="mmHg" placeholder="760" />
+          <FieldStr label="Quotient respiratoire (R)" value={RStr} onChange={setRStr} placeholder="0.8" />
+          <Toggle label="Trouble respiratoire chronique" checked={respChronic} onChange={setRespChronic} />
+        </div>
+      </details>
+
+      {/* Résultats */}
+      <div className="space-y-2 mt-3">
+        <div className="flex flex-wrap gap-2 text-xs">
+          <Chip>{disorder}</Chip>
+          <Chip tone={pfTone}>P/F {round(pf)}</Chip>
+          <Chip>A–a {round(aagrad)} mmHg</Chip>
+          <Chip>AG {round(ag)}</Chip>
+          <Chip>AGcorr {round(agCorr)}</Chip>
+          {Number.isFinite(lactate) && <Chip tone={lactTone as any}>Lactate {round(lactate)} mmol/L</Chip>}
+        </div>
+        <div className="flex gap-2">
+          <button className="px-3 py-2 rounded-xl border text-sm hover:bg-slate-50" onClick={onCopy}>Copier le résumé</button>
+        </div>
+        <div className="text-[11px] text-slate-500">
+          Repères: pH 7.35–7.45 ; PaCO₂ 35–45 ; HCO₃⁻ 22–26 ; P/F ≥ 300 ; AG normal ~8–12 (non corrigé) ; lactate ≤ 2.
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 type ToggleProps = { label: string; checked: boolean; onChange: (v: boolean) => void };
 
 function Toggle({ label, checked, onChange }: ToggleProps) {
@@ -478,6 +639,16 @@ function Toggle({ label, checked, onChange }: ToggleProps) {
       <span className="text-sm text-slate-700">{label}</span>
     </label>
   );
+}
+
+function Chip({ children, tone = "info" }: { children: React.ReactNode; tone?: "ok" | "warn" | "danger" | "info" }) {
+  const map: Record<string, string> = {
+    ok: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    warn: "bg-amber-50 text-amber-700 border-amber-200",
+    danger: "bg-rose-50 text-rose-700 border-rose-200",
+    info: "bg-slate-50 text-slate-700 border-slate-200",
+  };
+  return <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 ${map[tone]}`}>{children}</span>;
 }
 
 function CrCl() {
@@ -588,7 +759,7 @@ function Footer() {
       <div className="mx-auto w-full max-w-3xl px-4 py-6 text-sm text-slate-500">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div>
-            Conçu pour faciliter le quotidien infirmier. ⚠️ Aide au calcul uniquement.
+            Conçu pour faciliter le quotidien infirmier. ⚠️ Aide au calcul uniquement. Ne remplace pas l'avis médical.
           </div>
           <div>
             © {new Date().getFullYear()} — Fait avec ❤️ pour Chloé
@@ -630,6 +801,12 @@ function toNum(v: string) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function toNumAllowEmpty(v: string) {
+  if (v.trim() === "") return Number.NaN;
+  const n = Number(v.replace(",", "."));
+  return Number.isFinite(n) ? n : Number.NaN;
+}
+
 function Tests() {
   const cases = [
     {
@@ -656,6 +833,24 @@ function Tests() {
       actual: safeDiv((140 - 30) * 60 * 0.85, 72 * safeDiv(70, 88.4)),
       pass: approxEqual(safeDiv((140 - 30) * 60 * 0.85, 72 * safeDiv(70, 88.4)), 98.46),
     },
+    {
+      name: "P/F ratio 80 / 0.21",
+      expected: 380.95,
+      actual: pfRatio(80, 0.21),
+      pass: approxEqual(pfRatio(80, 0.21), 380.95, 0.01),
+    },
+    {
+      name: "A–a gradient basique",
+      expected: 4.7,
+      actual: aAGradientCustom(95, 40, 0.21, 760, 47, 0.8),
+      pass: approxEqual(aAGradientCustom(95, 40, 0.21, 760, 47, 0.8), 4.7, 0.05),
+    },
+    {
+      name: "Anion gap corrigé albumine (AG 16, Alb 2.0)",
+      expected: 21,
+      actual: correctedAnionGap(16, 2.0),
+      pass: approxEqual(correctedAnionGap(16, 2.0), 21, 0.01),
+    },
   ];
 
   const allPass = cases.every((c) => c.pass);
@@ -679,4 +874,72 @@ function Tests() {
       </details>
     </section>
   );
+}
+
+// === Gazométrie helpers ===
+function pfRatio(PaO2: number, FiO2: number) {
+  if (FiO2 <= 0) return 0;
+  return PaO2 / FiO2;
+}
+
+function alveolarPO2(FiO2: number, PaCO2: number, Patm = 760, PH2O = 47, R = 0.8) {
+  const k = Patm - PH2O;
+  return FiO2 * k - PaCO2 / R; // PAO2 = FiO2*(Patm-PH2O) - PaCO2/R
+}
+
+function aAGradientCustom(PaO2: number, PaCO2: number, FiO2: number, Patm = 760, PH2O = 47, R = 0.8) {
+  const PAO2 = alveolarPO2(FiO2, PaCO2, Patm, PH2O, R);
+  return Math.max(0, PAO2 - PaO2);
+}
+
+function aAGradient(PaO2: number, PaCO2: number, FiO2: number) {
+  return aAGradientCustom(PaO2, PaCO2, FiO2);
+}
+
+function anionGap(Na: number, Cl: number, HCO3: number) {
+  return Number(Na) - Number(Cl) - Number(HCO3);
+}
+
+function correctedAnionGap(ag: number, albumin_gdl: number) {
+  // Correction classique: AGcorr = AG + 2.5 * (4.0 - albumine [g/dL])
+  return ag + 2.5 * (4 - albumin_gdl);
+}
+
+function primaryDisorder(pH: number, PaCO2: number, HCO3: number) {
+  if (!Number.isFinite(pH) || !Number.isFinite(PaCO2) || !Number.isFinite(HCO3)) return "—";
+  const acidemia = pH < 7.35;
+  const alkalemia = pH > 7.45;
+  if (!acidemia && !alkalemia) return "pH normal ou mixte";
+  if (acidemia) {
+    if (PaCO2 > 45 && HCO3 <= 24) return "Acidose respiratoire";
+    if (HCO3 < 22) return "Acidose métabolique";
+    return "Acidose mixte/indéterminée";
+  }
+  if (alkalemia) {
+    if (PaCO2 < 35 && HCO3 >= 24) return "Alcalose respiratoire";
+    if (HCO3 > 26) return "Alcalose métabolique";
+    return "Alcalose mixte/indéterminée";
+  }
+  return "—";
+}
+
+function wintersExpectedPaCO2(HCO3: number) {
+  return 1.5 * HCO3 + 8; // ±2 tolérance
+}
+
+function metaAlkExpectedPaCO2(HCO3: number) {
+  return 0.7 * HCO3 + 20; // ±5 tolérance
+}
+
+function respCompHint(kind: "acidosis" | "alkalosis", acute: boolean, deltaCO2: number) {
+  // HCO3 change per 10 mmHg PaCO2 change
+  if (kind === "acidosis") return acute ? 1 * (deltaCO2 / 10) : 3.5 * (deltaCO2 / 10);
+  return acute ? -2 * (deltaCO2 / 10) : -4 * (deltaCO2 / 10);
+}
+
+function lactoneHint(l: number) {
+  if (!Number.isFinite(l)) return "";
+  if (l <= 2) return "(normal)";
+  if (l <= 4) return "(élevé)";
+  return "(très élevé)";
 }
